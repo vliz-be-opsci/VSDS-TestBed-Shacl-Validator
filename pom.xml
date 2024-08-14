@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.3.1</version>
+    </parent>
+    <groupId>be.vlaanderen.informatievlaanderen.ldes</groupId>
+    <artifactId>validator</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <properties>
+        <!-- Dependency and plugin versions. -->
+        <com.gitb.version>1.23.1</com.gitb.version>
+        <org.apache.cxf.version>4.0.4</org.apache.cxf.version>
+        <com.spotify.dockerfile-maven-plugin.version>1.4.13</com.spotify.dockerfile-maven-plugin.version>
+        <!-- Other properties. -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <docker.image.prefix>local</docker.image.prefix>
+
+        <scribejava.version>8.3.3</scribejava.version>
+        <rdf4j.version>4.3.6</rdf4j.version>
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>eu.europa.ec.itb</groupId>
+            <artifactId>gitb-types-jakarta</artifactId>
+            <version>${com.gitb.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-spring-boot-starter-jaxws</artifactId>
+            <version>${org.apache.cxf.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+
+        <dependency>
+            <groupId>com.github.scribejava</groupId>
+            <artifactId>scribejava-core</artifactId>
+            <version>${scribejava.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.scribejava</groupId>
+            <artifactId>scribejava-httpclient-apache</artifactId>
+            <version>${scribejava.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-codec</groupId>
+                    <artifactId>commons-codec</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.17.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.rdf4j</groupId>
+            <artifactId>rdf4j-client</artifactId>
+            <type>pom</type>
+            <version>4.3.5</version>
+<!--            <version>${rdf4j.version}</version>-->
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <!-- Used to create an executable JAR file. -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Used to build a Docker image if Docker is natively supported. -->
+            <plugin>
+                <groupId>com.spotify</groupId>
+                <artifactId>dockerfile-maven-plugin</artifactId>
+                <version>${com.spotify.dockerfile-maven-plugin.version}</version>
+                <configuration>
+                    <repository>${docker.image.prefix}/${project.artifactId}</repository>
+                    <buildArgs>
+                        <JAR_FILE>target/${project.build.finalName}.jar</JAR_FILE>
+                    </buildArgs>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
