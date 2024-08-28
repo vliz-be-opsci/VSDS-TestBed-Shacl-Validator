@@ -46,7 +46,7 @@ jobs:
       # TODO: setup Sonar
       - name: Analyse & publish package
         run: |
-          mvn -B verify deploy
+          mvn -B verify install
           export VERSION=$(mvn help:evaluate -Dexpression="project.version" -q -DforceStdout)
           echo "version=$VERSION" >> $GITHUB_ENV
         env:
