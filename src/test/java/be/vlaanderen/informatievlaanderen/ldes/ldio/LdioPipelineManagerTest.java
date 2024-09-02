@@ -20,7 +20,7 @@ import org.springframework.util.ResourceUtils;
 
 import java.io.IOException;
 
-import static be.vlaanderen.informatievlaanderen.ldes.ldio.pipeline.ValidationPipelineSupplier.PIPELINE_NAME_TEMPLATE;
+import static be.vlaanderen.informatievlaanderen.ldes.valueobjects.ValidationParameters.PIPELINE_NAME_TEMPLATE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.assertArg;
 import static org.mockito.ArgumentMatchers.eq;
@@ -63,6 +63,17 @@ class LdioPipelineManagerTest {
 						.hasBody(expectedJson)
 						.hasContentType(ContentType.APPLICATION_JSON)),
 				eq(201));
+	}
+
+	@Test
+	void test_HaltPipeline() {
+		final PostRequest expectedPostRequest = new PostRequest(LDIO_HOST + "/admin/api/v1/pipeline/" + PIPELINE_NAME + "/halt", "", "*/*");
+
+		ldioPipelineManager.haltPipeline(PIPELINE_NAME);
+
+		verify(requestExecutor).execute(
+				assertArg(actual -> assertThat(actual).usingRecursiveComparison().isEqualTo(expectedPostRequest)),
+				eq(200));
 	}
 
 	@Test

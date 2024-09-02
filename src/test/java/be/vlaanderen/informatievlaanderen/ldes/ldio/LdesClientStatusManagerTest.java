@@ -1,24 +1,16 @@
 package be.vlaanderen.informatievlaanderen.ldes.ldio;
 
+import be.vlaanderen.informatievlaanderen.ldes.http.HttpResponse;
 import be.vlaanderen.informatievlaanderen.ldes.http.RequestExecutor;
 import be.vlaanderen.informatievlaanderen.ldes.http.requests.GetRequest;
 import be.vlaanderen.informatievlaanderen.ldes.ldio.config.LdioConfigProperties;
-import be.vlaanderen.informatievlaanderen.ldes.ldio.excpeptions.LdesClientStatusUnavailableException;
 import be.vlaanderen.informatievlaanderen.ldes.ldio.valuebojects.ClientStatus;
-import org.apache.http.HttpEntity;
-import org.apache.http.entity.BasicHttpEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.io.ByteArrayInputStream;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -40,52 +32,31 @@ class LdesClientStatusManagerTest {
 	@Test
 	void test_WaitUntilReplicated() {
 		when(requestExecutor.execute(any(), eq(expectedStatusCodes)))
+				.thenReturn(createEmptyResponse())
 				.thenReturn(createResponse(ClientStatus.REPLICATING))
 				.thenReturn(createResponse(ClientStatus.REPLICATING))
 				.thenReturn(createResponse(ClientStatus.SYNCHRONISING));
 
 		ldesClientStatusManager.waitUntilReplicated(PIPELINE_NAME);
 
-		verify(requestExecutor, timeout(10000).times(3)).execute(any(), eq(expectedStatusCodes));
+		verify(requestExecutor, timeout(15000).times(4)).execute(any(), eq(expectedStatusCodes));
 	}
 
 	@Test
 	void test_WaitUntilReplicated_when_StatusUnavailable() {
-		final BasicHttpEntity response = new BasicHttpEntity();
-		response.setContentLength(0);
-		when(requestExecutor.execute(any(GetRequest.class), eq(200), eq(404))).thenReturn(response);
+		when(requestExecutor.execute(any(GetRequest.class), eq(200), eq(404))).thenReturn(createEmptyResponse());
 
-		assertThatThrownBy(() -> ldesClientStatusManager.waitUntilReplicated(PIPELINE_NAME))
-				.isInstanceOf(IllegalStateException.class)
-				.hasMessage("Unable to fetch the LDES client status");
+		ldesClientStatusManager.waitUntilReplicated(PIPELINE_NAME);
 
 		verify(requestExecutor, times(5)).execute(any(GetRequest.class), eq(200), eq(404));
 	}
 
-	@Test
-	void when_ClientStatusCannotBeFound_then_ThrowException() {
-		final BasicHttpEntity response = new BasicHttpEntity();
-		response.setContentLength(0);
-		when(requestExecutor.execute(any(), eq(expectedStatusCodes))).thenReturn(response);
-
-		assertThatThrownBy(() -> ldesClientStatusManager.getClientStatus(PIPELINE_NAME))
-				.isInstanceOf(LdesClientStatusUnavailableException.class)
-				.hasMessage("Ldes client status not available.");
+	private static HttpResponse createEmptyResponse() {
+		return new HttpResponse(404, null);
 	}
 
-	@ParameterizedTest
-	@EnumSource(ClientStatus.class)
-	void test_GetClientStatus(ClientStatus status) {
-		when(requestExecutor.execute(any(), eq(expectedStatusCodes))).thenReturn(createResponse(status));
-
-		final ClientStatus actualStatus = ldesClientStatusManager.getClientStatus(PIPELINE_NAME);
-
-		assertThat(actualStatus).isEqualTo(status);
-	}
-
-	private HttpEntity createResponse(ClientStatus status) {
-		final BasicHttpEntity response = new BasicHttpEntity();
-		response.setContent(new ByteArrayInputStream(('"' + status.toString() + '"').getBytes()));
-		return response;
+	private static HttpResponse createResponse(ClientStatus status) {
+		final String content = '"' + status.toString() + '"';
+		return new HttpResponse(200, content);
 	}
 }
