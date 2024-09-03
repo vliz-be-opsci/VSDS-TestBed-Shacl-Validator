@@ -1,12 +1,13 @@
 package be.vlaanderen.informatievlaanderen.ldes.ldio;
 
 import be.vlaanderen.informatievlaanderen.ldes.PostRequestAssert;
-import be.vlaanderen.informatievlaanderen.ldes.http.RequestExecutor;
-import be.vlaanderen.informatievlaanderen.ldes.http.requests.DeleteRequest;
-import be.vlaanderen.informatievlaanderen.ldes.http.requests.PostRequest;
-import be.vlaanderen.informatievlaanderen.ldes.ldes.EventStreamFetcher;
-import be.vlaanderen.informatievlaanderen.ldes.ldes.EventStreamProperties;
-import be.vlaanderen.informatievlaanderen.ldes.ldio.config.LdioConfigProperties;
+import be.vlaanderen.informatievlaanderen.ldes.gitb.ldio.LdioPipelineManager;
+import be.vlaanderen.informatievlaanderen.ldes.gitb.requestexecutor.RequestExecutor;
+import be.vlaanderen.informatievlaanderen.ldes.gitb.requestexecutor.requests.DeleteRequest;
+import be.vlaanderen.informatievlaanderen.ldes.gitb.requestexecutor.requests.PostRequest;
+import be.vlaanderen.informatievlaanderen.ldes.gitb.ldio.ldes.EventStreamFetcher;
+import be.vlaanderen.informatievlaanderen.ldes.gitb.ldio.ldes.EventStreamProperties;
+import be.vlaanderen.informatievlaanderen.ldes.gitb.ldio.config.LdioConfigProperties;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.entity.ContentType;
@@ -20,7 +21,7 @@ import org.springframework.util.ResourceUtils;
 
 import java.io.IOException;
 
-import static be.vlaanderen.informatievlaanderen.ldes.valueobjects.ValidationParameters.PIPELINE_NAME_TEMPLATE;
+import static be.vlaanderen.informatievlaanderen.ldes.gitb.shacl.valueobjects.ValidationParameters.PIPELINE_NAME_TEMPLATE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.assertArg;
 import static org.mockito.ArgumentMatchers.eq;
@@ -51,7 +52,7 @@ class LdioPipelineManagerTest {
 	@Test
 	void test_InitPipeline() throws IOException {
 		final JsonNode expectedJson = new ObjectMapper().readTree(ResourceUtils.getFile("classpath:ldio-pipeline.json"));
-		when(eventStreamFetcher.fetchProperties(LDES_SERVER_URL)).thenReturn(new EventStreamProperties(LDES_SERVER_URL, "http://purl.org/dc/terms/isVersionOf"));
+		when(eventStreamFetcher.fetchProperties(LDES_SERVER_URL)).thenReturn(new EventStreamProperties(LDES_SERVER_URL, "http://purl.org/dc/terms/isVersionOf", "http://www.w3.org/ns/prov#generatedAtTime"));
 
 		ldioPipelineManager.initPipeline(LDES_SERVER_URL, PIPELINE_NAME);
 
