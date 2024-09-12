@@ -1,17 +1,19 @@
-package be.vlaanderen.informatievlaanderen.ldes.ldio;
+package be.vlaanderen.informatievlaanderen.ldes.gitb.ldio;
 
-import be.vlaanderen.informatievlaanderen.ldes.gitb.ldio.LdesClientStatusManager;
+import be.vlaanderen.informatievlaanderen.ldes.gitb.ldio.config.LdioConfigProperties;
+import be.vlaanderen.informatievlaanderen.ldes.gitb.ldio.valuebojects.ClientStatus;
 import be.vlaanderen.informatievlaanderen.ldes.gitb.requestexecutor.HttpResponse;
 import be.vlaanderen.informatievlaanderen.ldes.gitb.requestexecutor.RequestExecutor;
 import be.vlaanderen.informatievlaanderen.ldes.gitb.requestexecutor.requests.GetRequest;
-import be.vlaanderen.informatievlaanderen.ldes.gitb.ldio.config.LdioConfigProperties;
-import be.vlaanderen.informatievlaanderen.ldes.gitb.ldio.valuebojects.ClientStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -30,26 +32,15 @@ class LdesClientStatusManagerTest {
 		ldesClientStatusManager = new LdesClientStatusManager(requestExecutor, ldioConfigProperties);
 	}
 
-	@Test
-	void test_WaitUntilReplicated() {
-		when(requestExecutor.execute(any(), eq(expectedStatusCodes)))
-				.thenReturn(createEmptyResponse())
-				.thenReturn(createResponse(ClientStatus.REPLICATING))
-				.thenReturn(createResponse(ClientStatus.REPLICATING))
-				.thenReturn(createResponse(ClientStatus.SYNCHRONISING));
 
-		ldesClientStatusManager.waitUntilReplicated(PIPELINE_NAME);
+	@ParameterizedTest
+	@EnumSource(ClientStatus.class)
+	void test_GetClientStatus(ClientStatus status) {
+		when(requestExecutor.execute(any(GetRequest.class), eq(expectedStatusCodes))).thenReturn(createResponse(status));
 
-		verify(requestExecutor, timeout(15000).times(4)).execute(any(), eq(expectedStatusCodes));
-	}
+		final ClientStatus actual = ldesClientStatusManager.getClientStatus(PIPELINE_NAME);
 
-	@Test
-	void test_WaitUntilReplicated_when_StatusUnavailable() {
-		when(requestExecutor.execute(any(GetRequest.class), eq(200), eq(404))).thenReturn(createEmptyResponse());
-
-		ldesClientStatusManager.waitUntilReplicated(PIPELINE_NAME);
-
-		verify(requestExecutor, times(5)).execute(any(GetRequest.class), eq(200), eq(404));
+		assertThat(actual).isEqualTo(status);
 	}
 
 	private static HttpResponse createEmptyResponse() {

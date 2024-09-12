@@ -1,6 +1,7 @@
-package be.vlaanderen.informatievlaanderen.ldes.gitb.shacl.services;
+package be.vlaanderen.informatievlaanderen.ldes.gitb.services.suppliers;
 
 import com.gitb.core.AnyContent;
+import com.gitb.core.ValueEmbeddingEnumeration;
 import com.gitb.tr.TAR;
 import com.gitb.tr.TestResultType;
 
@@ -11,16 +12,23 @@ import java.util.function.Supplier;
 
 public class TarSupplier implements Supplier<TAR> {
 	private final TestResultType testResultType;
+	private final AnyContent context;
 
-	private TarSupplier(TestResultType testResultType) {
+	public TarSupplier(TestResultType testResultType, AnyContent context) {
 		this.testResultType = testResultType;
+		this.context = context;
+	}
+
+	public TarSupplier(TestResultType testResultType) {
+		this.testResultType = testResultType;
+		this.context = new AnyContent();
+		this.context.setType("string");
+		this.context.setEmbeddingMethod(ValueEmbeddingEnumeration.STRING);
 	}
 
 	@Override
 	public TAR get() {
 		final TAR tar = new TAR();
-		final AnyContent context = new AnyContent();
-		context.setType("map");
 		tar.setContext(context);
 		tar.setResult(testResultType);
 		try {
